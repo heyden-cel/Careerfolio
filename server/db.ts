@@ -1,7 +1,15 @@
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
+import dns from 'node:dns'
 
 dotenv.config()
+
+// Ensure Node.js resolves Atlas SRV records smoothly across all networks
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1'])
+} catch {
+  // Ignore if custom DNS servers cannot be set
+}
 
 const MONGODB_URI = process.env.MONGODB_URI || ''
 
