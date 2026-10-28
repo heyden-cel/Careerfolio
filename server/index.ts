@@ -6,9 +6,12 @@ import authRouter     from './routes/auth.js'
 import profileRouter  from './routes/profile.js'
 import documentsRouter from './routes/documents.js'
 import aiRouter     from './routes/ai.js'
+import { connectDB } from './db.js'
 
 const app  = express()
 const PORT = process.env.PORT || 3001
+
+connectDB()
 
 app.use(cors({
   origin: true,
