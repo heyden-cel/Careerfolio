@@ -249,7 +249,7 @@ export function LoginPage() {
           <div style={{
             width:'48px', height:'48px', borderRadius:'var(--radius-card)',
             background:'var(--color-primary-subtle)',
-            border:'1px solid var(--color-primary-border)',
+            border:'1px solid rgba(34,197,94,.25)',
             display:'flex', alignItems:'center', justifyContent:'center',
           }}>
             <Zap size={22} color="var(--color-primary)" />
@@ -399,8 +399,8 @@ export function LoginPage() {
 
                 <p style={{ fontSize:'12px', color:'var(--color-text-muted)', textAlign:'center', lineHeight:1.5 }}>
                   By signing up you agree to our{' '}
-                  <Link to="#" style={{ color:'var(--color-primary-text)' }}>Terms</Link> and{' '}
-                  <Link to="#" style={{ color:'var(--color-primary-text)' }}>Privacy Policy</Link>.
+                  <Link to="#" style={{ color:'var(--color-primary)' }}>Terms</Link> and{' '}
+                  <Link to="#" style={{ color:'var(--color-primary)' }}>Privacy Policy</Link>.
                 </p>
               </form>
             )}
@@ -410,8 +410,8 @@ export function LoginPage() {
         {/* Footer link */}
         <p style={{ textAlign:'center', fontSize:'14px', color:'var(--color-text-muted)' }}>
           {tab === 'signin'
-            ? <>No account? <button onClick={() => setTab('signup')} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary-text)', fontWeight:500, fontSize:'14px' }}>Sign up free</button></>
-            : <>Already have an account? <button onClick={() => setTab('signin')} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary-text)', fontWeight:500, fontSize:'14px' }}>Sign in</button></>
+            ? <>No account? <button onClick={() => setTab('signup')} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary)', fontWeight:500, fontSize:'14px' }}>Sign up free</button></>
+            : <>Already have an account? <button onClick={() => setTab('signin')} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--color-primary)', fontWeight:500, fontSize:'14px' }}>Sign in</button></>
           }
         </p>
       </div>

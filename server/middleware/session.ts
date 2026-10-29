@@ -1,7 +1,14 @@
-﻿import { Request, Response, NextFunction } from 'express'
+import { Request, Response, NextFunction } from 'express'
 
 // Simple in-memory session store (replace with real sessions later)
-const sessions = new Map<string, { id: string; name: string; email: string }>()
+export interface SessionUser {
+  id: string
+  name: string
+  email: string
+  role?: 'user' | 'admin'
+}
+
+const sessions = new Map<string, SessionUser>()
 
 // Demo user
 sessions.set('demo-session', { id: '1', name: 'Demo User', email: 'demo@folio.ai' })
@@ -11,7 +18,7 @@ export function getSession(req: Request) {
   return sid ? sessions.get(sid) : null
 }
 
-export function createSession(user: { id: string; name: string; email: string }): string {
+export function createSession(user: SessionUser): string {
   const sid = Math.random().toString(36).slice(2)
   sessions.set(sid, user)
   return sid

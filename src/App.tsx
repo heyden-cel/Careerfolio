@@ -20,7 +20,7 @@ export default function App() {
               fontFamily: 'var(--font-ui)',
               fontSize: '14px',
             },
-            success: { iconTheme: { primary: 'var(--color-success)', secondary: 'var(--color-text-inverse)' } },
+            success: { iconTheme: { primary: 'var(--color-primary)', secondary: 'var(--color-text-inverse)' } },
             error:   { iconTheme: { primary: 'var(--color-danger)',  secondary: '#fff' } },
           }}
         />

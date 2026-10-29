@@ -16,11 +16,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (theme === 'light') html.setAttribute('data-theme', 'light')
     else html.removeAttribute('data-theme')
     localStorage.setItem('folio_theme', theme)
-
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'light' ? '#FAF6F0' : '#2B1D17')
-    }
   }, [theme])
 
   const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark')

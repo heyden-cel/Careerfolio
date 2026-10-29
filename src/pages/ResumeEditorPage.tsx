@@ -244,23 +244,23 @@ function AiActionHeader({
             fontSize: '11px',
             fontWeight: 600,
             borderRadius: '6px',
-            border: '1px solid var(--color-primary-border)',
+            border: '1px solid rgba(34, 197, 94, 0.4)',
             background: 'var(--color-primary-subtle)',
-            color: 'var(--color-primary-text)',
+            color: 'var(--color-primary)',
             cursor: loading ? 'not-allowed' : 'pointer',
             opacity: loading ? 0.75 : 1,
             transition: 'all 150ms',
           }}
           onMouseEnter={e => {
             if (!loading) {
-              e.currentTarget.style.background = 'var(--color-primary-subtle)'
+              e.currentTarget.style.background = 'rgba(34, 197, 94, 0.22)'
               e.currentTarget.style.borderColor = 'var(--color-primary)'
             }
           }}
           onMouseLeave={e => {
             if (!loading) {
               e.currentTarget.style.background = 'var(--color-primary-subtle)'
-              e.currentTarget.style.borderColor = 'var(--color-primary-border)'
+              e.currentTarget.style.borderColor = 'rgba(34, 197, 94, 0.4)'
             }
           }}
         >
@@ -275,7 +275,7 @@ function AiActionHeader({
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Classic Template (Single Column, Black Text with Green Accent Only)
 // ─────────────────────────────────────────────────────────────────────────────
-export function ClassicTemplate({ p, accent = 'var(--color-primary)' }: { p: Profile; accent?: string }) {
+export function ClassicTemplate({ p, accent = '#16a34a' }: { p: Profile; accent?: string }) {
   const green = accent
   const black = '#0a0a0a'
   const muted = '#4b5563'
@@ -563,7 +563,7 @@ export function ClassicTemplate({ p, accent = 'var(--color-primary)' }: { p: Pro
 // ─────────────────────────────────────────────────────────────────────────────
 export function ModernTemplate({
   p,
-  accent = 'var(--color-primary)',
+  accent = '#22c55e',
   sidebarBg = '#09090b',
   sidebarText = '#f8fafc',
 }: {
@@ -620,7 +620,7 @@ export function ModernTemplate({
                 width: '52px',
                 height: '52px',
                 borderRadius: '50%',
-                background: 'var(--color-bg)',
+                background: '#18181b',
                 border: `2px solid ${green}`,
                 display: 'flex',
                 alignItems: 'center',
@@ -725,7 +725,7 @@ export function ModernTemplate({
                     fontSize: '9.5px',
                     padding: '3px 8px',
                     borderRadius: '4px',
-                    background: 'var(--color-bg)',
+                    background: '#18181b',
                     color: '#f4f4f5',
                     border: `1px solid ${green}60`,
                     fontWeight: 500,
@@ -950,7 +950,7 @@ export function ResumeEditorPage() {
   const [newSkillInput, setNewSkillInput] = useState('')
 
   // Palette State & Custom Accents
-  const [paletteId, setPaletteId] = useState<string>(doc.palette || 'coffee')
+  const [paletteId, setPaletteId] = useState<string>(doc.palette || 'midnight-green')
   const [customAccent, setCustomAccent] = useState<string | undefined>(doc.accent)
   const [customAccent2, setCustomAccent2] = useState<string | undefined>(doc.accent2)
 
@@ -1361,8 +1361,8 @@ export function ResumeEditorPage() {
                   borderRadius: '999px',
                   fontSize: '12px',
                   background: 'var(--color-primary-subtle)',
-                  color: 'var(--color-primary-text)',
-                  border: '1px solid var(--color-primary-border)',
+                  color: 'var(--color-primary)',
+                  border: '1px solid rgba(34,197,94,0.3)',
                   fontWeight: 500,
                 }}
               >
@@ -2054,7 +2054,7 @@ export function ResumeEditorPage() {
         overflowY: 'auto',
         overflowX: 'auto',
         padding: '30px 20px',
-        background: 'var(--color-bg)',
+        background: '#18181b',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'flex-start',

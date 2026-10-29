@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express'
+import { logAiRequest, checkDailyAiLimit } from '../services/adminStore.js'
 
 const router = Router()
 
@@ -294,6 +295,18 @@ const handleAiRequest = async (req: Request, res: Response): Promise<void> => {
     const action = (body.action || body.type || 'summary').toLowerCase().trim()
     const requestedFormat = (body.format || (req.headers.accept?.includes('text/plain') ? 'text' : 'json')).toLowerCase()
 
+    const userId = (req as any).user?.id || '1'
+    const userEmail = (req as any).user?.email || 'demo@folio.ai'
+    const limitCheck = checkDailyAiLimit(userId)
+    if (!limitCheck.allowed) {
+      res.status(429).json({
+        error: `Daily AI request limit of ${limitCheck.limit} reached. Please contact your administrator.`,
+      })
+      return
+    }
+
+    logAiRequest(action, userId, userEmail)
+
     await delay(350)
 
     switch (action) {
@@ -415,7 +428,7 @@ const handleAiRequest = async (req: Request, res: Response): Promise<void> => {
 
       case 'suggest_palette': {
         const title = (body.jobTitle || body.title || body.context || '').toString().toLowerCase()
-        let paletteId = 'coffee'
+        let paletteId = 'midnight-green'
         if (title.includes('security') || title.includes('cyber') || title.includes('penetration')) paletteId = 'black-red'
         else if (title.includes('devops') || title.includes('cloud') || title.includes('infrastructure') || title.includes('sre')) paletteId = 'ocean'
         else if (title.includes('design') || title.includes('ui') || title.includes('ux') || title.includes('creative') || title.includes('art')) paletteId = 'royal-purple'

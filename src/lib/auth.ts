@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ─── Mock Auth Module ────────────────────────────────────────────────────────
  * Backed by localStorage. Swap individual functions for real API calls later.
  *
@@ -11,6 +11,7 @@ export interface AuthUser {
   id:    string
   name:  string
   email: string
+  role?: 'user' | 'admin'
 }
 
 // ── tiny deterministic "hash" (not secure — mock only) ──────────────────────
@@ -51,7 +52,7 @@ export async function signIn(email: string, password: string): Promise<AuthUser>
   if (!stored || stored.passwordHash !== fakeHash(password)) {
     throw new AuthError('invalid_credentials', 'Incorrect email or password.')
   }
-  const user: AuthUser = { id: stored.id, name: stored.name, email: stored.email }
+  const user: AuthUser = { id: stored.id, name: stored.name, email: stored.email, role: stored.role || 'user' }
   writeSession(user)
   return user
 }
@@ -61,7 +62,8 @@ export async function signUp(name: string, email: string, password: string): Pro
   const users = readUsers()
   const key   = email.toLowerCase()
   if (users[key]) throw new AuthError('email_taken', 'An account with that email already exists.')
-  const user: AuthUser = { id: Math.random().toString(36).slice(2), name, email: key }
+  // Public signups are strictly granted role 'user'; admin accounts cannot be created publicly
+  const user: AuthUser = { id: Math.random().toString(36).slice(2), name, email: key, role: 'user' }
   users[key] = { ...user, passwordHash: fakeHash(password) }
   writeUsers(users)
   writeSession(user)
@@ -82,7 +84,7 @@ export async function signInWithGoogle(): Promise<AuthUser> {
     users[email] = { id: 'google-1', name: 'Google User', email, passwordHash: '' }
     writeUsers(users)
   }
-  const user: AuthUser = { id: users[email].id, name: users[email].name, email }
+  const user: AuthUser = { id: users[email].id, name: users[email].name, email, role: 'user' }
   writeSession(user)
   return user
 }

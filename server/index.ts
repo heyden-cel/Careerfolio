@@ -1,11 +1,14 @@
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import path from 'node:path'
 import fs from 'node:fs'
 import authRouter     from './routes/auth.js'
 import profileRouter  from './routes/profile.js'
 import documentsRouter from './routes/documents.js'
 import aiRouter     from './routes/ai.js'
+import adminRouter  from './routes/admin.js'
+import { verifyAdminToken } from './middleware/adminAuth.js'
 import { connectDB } from './db.js'
 
 const app  = express()
@@ -18,11 +21,13 @@ app.use(cors({
   credentials: true,
 }))
 app.use(express.json())
+app.use(cookieParser())
 
 app.use('/api/auth',      authRouter)
 app.use('/api/profile',   profileRouter)
 app.use('/api/documents', documentsRouter)
 app.use('/api/ai',        aiRouter)
+app.use('/api/admin',     adminRouter)
 
 app.post('/api/contact', (req, res) => {
   const { name, email, message } = req.body || {}
@@ -51,6 +56,16 @@ app.use(express.static(distPath))
 
 app.get('{*path}', (req, res, next) => {
   if (req.path.startsWith('/api')) return next()
+
+  // Server-side access control: check role === 'admin' on all /admin/* routes
+  if (req.path === '/admin' || (req.path.startsWith('/admin/') && req.path !== '/admin/login')) {
+    const adminToken = req.cookies?.['folio_admin_token'] ||
+      (req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.slice(7) : undefined)
+    const verified = adminToken ? verifyAdminToken(adminToken) : null
+    if (!verified || verified.role !== 'admin') {
+      return res.redirect('/admin/login')
+    }
+  }
   const indexPath = path.join(distPath, 'index.html')
   if (fs.existsSync(indexPath)) {
     return res.sendFile(indexPath)

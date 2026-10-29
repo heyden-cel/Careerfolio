@@ -1,4 +1,4 @@
-﻿import { Router } from 'express'
+import { Router } from 'express'
 import { getSession, createSession, destroySession } from '../middleware/session.js'
 
 const router = Router()
@@ -15,7 +15,7 @@ router.post('/login', (req, res) => {
   if (!email || password !== 'password') {
     res.status(401).json({ error: 'Invalid credentials' }); return
   }
-  const user = { id: '1', name: email.split('@')[0], email }
+  const user = { id: '1', name: email.split('@')[0], email, role: 'user' as const }
   const sid  = createSession(user)
   res.json({ user, sessionId: sid })
 })

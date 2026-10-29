@@ -1,5 +1,8 @@
 import { createBrowserRouter, RouterProvider, Navigate, useLocation, Outlet } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { AdminAuthProvider } from '@/context/AdminAuthContext'
+import { AdminGuard } from '@/components/admin/AdminGuard'
+import { AdminLayout } from '@/components/admin/AdminLayout'
 import { Navbar } from '@/components/ui/Navbar'
 import { Footer } from '@/components/ui/Footer'
 import { Loader2 } from 'lucide-react'
@@ -12,8 +15,17 @@ import { ResumeEditorPage }    from '@/pages/ResumeEditorPage'
 import { PortfolioEditorPage } from '@/pages/PortfolioEditorPage'
 import { PublicPortfolioPage } from '@/pages/PublicPortfolioPage'
 import { SettingsPage }        from '@/pages/SettingsPage'
+import { NotFoundPage }        from '@/pages/NotFoundPage'
 
-import { NotFoundPage }       from '@/pages/NotFoundPage'
+// Admin pages
+import { AdminLoginPage }     from '@/pages/admin/AdminLoginPage'
+import { AdminOverviewPage }  from '@/pages/admin/AdminOverviewPage'
+import { AdminUsersPage }     from '@/pages/admin/AdminUsersPage'
+import { AdminDocumentsPage } from '@/pages/admin/AdminDocumentsPage'
+import { AdminPortfoliosPage } from '@/pages/admin/AdminPortfoliosPage'
+import { AdminAiPage }        from '@/pages/admin/AdminAiPage'
+import { AdminAuditLogsPage } from '@/pages/admin/AdminAuditLogsPage'
+import { AdminSettingsPage }  from '@/pages/admin/AdminSettingsPage'
 
 /* ── Guards ───────────────────────────────────────────────── */
 function AuthGuard() {
@@ -50,8 +62,46 @@ function AppLayout() {
   )
 }
 
+/** Wraps all /admin/* routes in the AdminAuthProvider context */
+function AdminRoot() {
+  return (
+    <AdminAuthProvider>
+      <Outlet />
+    </AdminAuthProvider>
+  )
+}
+
 /* ── Router ───────────────────────────────────────────────── */
 const router = createBrowserRouter([
+  /* ── Admin section (completely separate from user app) ──── */
+  {
+    path: '/admin',
+    element: <AdminRoot />,
+    children: [
+      // Public admin login page (no guard)
+      { path: 'login', element: <AdminLoginPage /> },
+      // Protected admin pages
+      {
+        element: <AdminGuard />,
+        children: [
+          {
+            element: <AdminLayout />,
+            children: [
+              { index: true, element: <AdminOverviewPage /> },
+              { path: 'users', element: <AdminUsersPage /> },
+              { path: 'documents', element: <AdminDocumentsPage /> },
+              { path: 'portfolios', element: <AdminPortfoliosPage /> },
+              { path: 'ai', element: <AdminAiPage /> },
+              { path: 'audit-logs', element: <AdminAuditLogsPage /> },
+              { path: 'settings', element: <AdminSettingsPage /> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  /* ── User app ────────────────────────────────────────────── */
   {
     element: <AppLayout />,
     children: [

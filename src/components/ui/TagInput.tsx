@@ -36,7 +36,7 @@ export function TagInput({ label, tags, onChange, placeholder = 'Type and press 
         'transition-all duration-150'
       )}>
         {tags.map((t, i) => (
-          <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-primary-subtle)] border border-[var(--color-primary-border)] text-[var(--color-primary-text)] text-xs font-mono">
+          <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-primary-subtle)] border border-[rgba(34,197,94,.3)] text-[var(--color-primary)] text-xs font-mono">
             {t}
             <button type="button" onClick={() => remove(i)} className="hover:text-[var(--color-primary-hover)] transition-colors">
               <X size={10} />

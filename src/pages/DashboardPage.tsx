@@ -68,9 +68,9 @@ const S = {
   }),
   tag: (color: 'green' | 'gray' | 'red'): React.CSSProperties => {
     const map = {
-      green: { bg: 'var(--color-primary-subtle)', border: 'var(--color-primary-border)', text: 'var(--color-primary-text)' },
+      green: { bg: 'var(--color-primary-subtle)', border: 'rgba(34,197,94,.3)', text: 'var(--color-primary)' },
       gray:  { bg: 'var(--color-border)',         border: 'var(--color-border)', text: 'var(--color-text-muted)' },
-      red:   { bg: 'var(--color-danger-subtle)',  border: 'var(--color-danger-border)',   text: 'var(--color-danger)' },
+      red:   { bg: 'var(--color-danger-subtle)',  border: 'rgba(239,68,68,.3)',  text: 'var(--color-danger)' },
     }[color]
     return {
       display: 'inline-flex', alignItems: 'center', gap: '4px',
@@ -377,7 +377,7 @@ export function DashboardPage() {
     upsertDocument({
       id, type, live: false, slug, editedAt: new Date().toISOString(),
       title: type === 'resume' ? 'Untitled Resume' : 'Untitled Portfolio',
-      template: type === 'resume' ? 'classic' : 'coffee',
+      template: type === 'resume' ? 'classic' : 'midnight',
     })
     refresh()
     toast.success(`${type === 'resume' ? 'Resume' : 'Portfolio'} created`)
@@ -483,7 +483,7 @@ export function DashboardPage() {
                   minWidth: '18px', height: '18px', borderRadius: '999px', padding: '0 5px',
                   fontSize: '10px', fontFamily: 'var(--font-mono)', fontWeight: 700,
                   background: tab === t ? 'var(--color-primary)' : 'var(--color-border)',
-                  color: tab === t ? 'var(--color-text-inverse)' : 'var(--color-text-muted)',
+                  color: tab === t ? '#000' : 'var(--color-text-muted)',
                   transition: 'all 150ms',
                 }}>{tabCounts[t]}</span>
               </button>
