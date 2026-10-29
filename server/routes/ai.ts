@@ -415,7 +415,7 @@ const handleAiRequest = async (req: Request, res: Response): Promise<void> => {
 
       case 'suggest_palette': {
         const title = (body.jobTitle || body.title || body.context || '').toString().toLowerCase()
-        let paletteId = 'midnight-green'
+        let paletteId = 'coffee'
         if (title.includes('security') || title.includes('cyber') || title.includes('penetration')) paletteId = 'black-red'
         else if (title.includes('devops') || title.includes('cloud') || title.includes('infrastructure') || title.includes('sre')) paletteId = 'ocean'
         else if (title.includes('design') || title.includes('ui') || title.includes('ux') || title.includes('creative') || title.includes('art')) paletteId = 'royal-purple'

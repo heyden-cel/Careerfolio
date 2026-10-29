@@ -1,4 +1,4 @@
-﻿import { HTMLAttributes } from 'react'
+import { HTMLAttributes } from 'react'
 import clsx from 'clsx'
 
 type BadgeVariant = 'default' | 'primary' | 'danger' | 'live'
@@ -9,9 +9,9 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 
 const styles: Record<BadgeVariant, string> = {
   default: 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)]',
-  primary: 'bg-[var(--color-primary-subtle)] border-[rgba(34,197,94,.3)] text-[var(--color-primary)]',
-  danger:  'bg-[var(--color-danger-subtle)] border-[rgba(239,68,68,.3)] text-[var(--color-danger)]',
-  live:    'bg-[var(--color-primary-subtle)] border-[rgba(34,197,94,.3)] text-[var(--color-primary)]',
+  primary: 'bg-[var(--color-primary-subtle)] border-[var(--color-primary-border)] text-[var(--color-primary-text)]',
+  danger:  'bg-[var(--color-danger-subtle)] border-[var(--color-danger-border)] text-[var(--color-danger)]',
+  live:    'bg-[var(--color-primary-subtle)] border-[var(--color-primary-border)] text-[var(--color-primary-text)]',
 }
 
 export function Badge({ variant = 'default', className, children, ...props }: BadgeProps) {

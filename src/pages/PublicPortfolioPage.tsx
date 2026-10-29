@@ -53,22 +53,22 @@ export function PublicPortfolioPage() {
 
   if (!doc) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center" style={{ background: '#0A0A0B', color: '#F4F4F5' }}>
-        <Zap size={36} className="text-[#22C55E]" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
+        <Zap size={36} className="text-[var(--color-primary)]" />
         <h1 className="text-2xl font-bold">Portfolio not found</h1>
-        <p className="text-[#A1A1AA] text-sm max-w-sm">We couldn't find a portfolio at this URL. The link may be incorrect or has been removed.</p>
-        <Link to="/" className="text-[#22C55E] hover:underline text-sm font-medium">← Return home</Link>
+        <p className="text-[var(--color-text-muted)] text-sm max-w-sm">We couldn't find a portfolio at this URL. The link may be incorrect or has been removed.</p>
+        <Link to="/" className="text-[var(--color-primary-text)] hover:underline text-sm font-medium">← Return home</Link>
       </div>
     )
   }
 
   if (!doc.live) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center" style={{ background: '#0A0A0B', color: '#F4F4F5' }}>
-        <Zap size={36} className="text-[#22C55E]" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
+        <Zap size={36} className="text-[var(--color-primary)]" />
         <h1 className="text-2xl font-bold">Portfolio is unpublished</h1>
-        <p className="text-[#A1A1AA] text-sm max-w-sm">This portfolio is currently private or has been unpublished by the author.</p>
-        <Link to="/" className="text-[#22C55E] hover:underline text-sm font-medium">← Return home</Link>
+        <p className="text-[var(--color-text-muted)] text-sm max-w-sm">This portfolio is currently private or has been unpublished by the author.</p>
+        <Link to="/" className="text-[var(--color-primary-text)] hover:underline text-sm font-medium">← Return home</Link>
       </div>
     )
   }

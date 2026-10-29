@@ -19,7 +19,7 @@ interface AppearanceCardProps {
 }
 
 export function AppearanceCard({
-  paletteId = 'midnight-green',
+  paletteId = 'coffee',
   customAccent,
   customAccent2,
   jobTitle,
@@ -285,7 +285,7 @@ export function AppearanceCard({
                   <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-[var(--color-border)] shrink-0">
                     <input
                       type="color"
-                      value={isValidHex(resolved.accent) ? normalizeHex(resolved.accent) : '#22C55E'}
+                      value={isValidHex(resolved.accent) ? normalizeHex(resolved.accent) : '#C48A5A'}
                       onChange={e => handleAccentChange(e.target.value)}
                       className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer border-none bg-transparent"
                     />
@@ -295,7 +295,7 @@ export function AppearanceCard({
                     type="text"
                     value={customAccent !== undefined ? customAccent : resolved.accent}
                     onChange={e => handleAccentChange(e.target.value)}
-                    placeholder="#22C55E"
+                    placeholder="#C48A5A"
                     className="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]"
                   />
                 </div>
@@ -310,7 +310,7 @@ export function AppearanceCard({
                   <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-[var(--color-border)] shrink-0">
                     <input
                       type="color"
-                      value={isValidHex(resolved.accent2) ? normalizeHex(resolved.accent2) : '#86EFAC'}
+                      value={isValidHex(resolved.accent2) ? normalizeHex(resolved.accent2) : '#E7D6C1'}
                       onChange={e => handleAccent2Change(e.target.value)}
                       className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer border-none bg-transparent"
                     />
@@ -320,7 +320,7 @@ export function AppearanceCard({
                     type="text"
                     value={customAccent2 !== undefined ? customAccent2 : resolved.accent2}
                     onChange={e => handleAccent2Change(e.target.value)}
-                    placeholder="#86EFAC"
+                    placeholder="#E7D6C1"
                     className="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] outline-none focus:border-[var(--color-primary)]"
                   />
                 </div>

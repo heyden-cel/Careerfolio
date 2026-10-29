@@ -15,6 +15,17 @@ export interface PalettePreset {
 export const PALETTES: PalettePreset[] = [
   // ── Dark Palettes ──
   {
+    id: 'coffee',
+    name: 'Coffee',
+    category: 'dark',
+    bg: '#2B1D17',
+    surface: '#35251D',
+    text: '#FAF6F0',
+    muted: '#CDB9A3',
+    accent: '#C48A5A',
+    accent2: '#E7D6C1',
+  },
+  {
     id: 'midnight-green',
     name: 'Midnight Green',
     category: 'dark',
@@ -116,6 +127,17 @@ export const PALETTES: PalettePreset[] = [
 
   // ── Light Palettes ──
   {
+    id: 'coffee-cream',
+    name: 'Coffee & Cream',
+    category: 'light',
+    bg: '#FAF6F0',
+    surface: '#FFFFFF',
+    text: '#2B1D17',
+    muted: '#6B4A3A',
+    accent: '#C48A5A',
+    accent2: '#8A5226',
+  },
+  {
     id: 'clean-light',
     name: 'Clean Light',
     category: 'light',
@@ -150,15 +172,18 @@ export const PALETTES: PalettePreset[] = [
   },
 ]
 
-export const DEFAULT_PALETTE_ID = 'midnight-green'
+export const DEFAULT_PALETTE_ID = 'coffee'
 
 export function getPalettePreset(id?: string): PalettePreset {
   if (!id) return PALETTES[0]
-  // Fallback for legacy template names: 'midnight' -> 'midnight-green', 'light' -> 'clean-light', 'graphite' -> 'monochrome'
-  if (id === 'midnight') return PALETTES[0]
+  // Direct match
+  const found = PALETTES.find(p => p.id === id)
+  if (found) return found
+  // Fallbacks for legacy template names
+  if (id === 'midnight' || id === 'midnight-green') return PALETTES.find(p => p.id === 'midnight-green') || PALETTES[0]
   if (id === 'light') return PALETTES.find(p => p.id === 'clean-light') || PALETTES[0]
   if (id === 'graphite') return PALETTES.find(p => p.id === 'slate-teal') || PALETTES[0]
-  return PALETTES.find(p => p.id === id) || PALETTES[0]
+  return PALETTES[0]
 }
 
 // ─── Color & Luminance Math ──────────────────────────────────────────────────
@@ -221,20 +246,24 @@ export function getContrastRatio(hex1: string, hex2: string): number {
 }
 
 /**
- * Returns readable text color (#000000 or #FFFFFF) for buttons based on contrast.
+ * Returns readable text color (#2B1D17, #000000 or #FFFFFF) for buttons based on contrast.
  */
-export function getOnAccentColor(accentHex: string): '#000000' | '#FFFFFF' {
-  const contrastWithBlack = getContrastRatio(accentHex, '#000000')
+export function getOnAccentColor(accentHex: string): '#2B1D17' | '#FFFFFF' | '#000000' {
+  const clean = normalizeHex(accentHex)
+  if (clean === '#C48A5A' || clean === '#D39B6C' || clean === '#E7D6C1' || clean === '#FAF6F0') {
+    return '#2B1D17'
+  }
+  const contrastWithEspresso = getContrastRatio(accentHex, '#2B1D17')
   const contrastWithWhite = getContrastRatio(accentHex, '#FFFFFF')
-  return contrastWithBlack >= contrastWithWhite ? '#000000' : '#FFFFFF'
+  return contrastWithEspresso >= contrastWithWhite ? '#2B1D17' : '#FFFFFF'
 }
 
 /**
- * Generates RGBA string at specified opacity (default 12% = 0.12)
+ * Generates RGBA string at specified opacity (default 14% = 0.14)
  */
-export function getAccentTint(hex: string, alpha = 0.12): string {
+export function getAccentTint(hex: string, alpha = 0.14): string {
   const rgb = hexToRgb(hex)
-  if (!rgb) return `rgba(34, 197, 94, ${alpha})`
+  if (!rgb) return `rgba(196, 138, 90, ${alpha})`
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
 }
 
@@ -267,7 +296,7 @@ export interface ResolvedPalette {
   accent: string
   accent2: string
   accentTint: string
-  onAccent: '#000000' | '#FFFFFF'
+  onAccent: '#2B1D17' | '#FFFFFF' | '#000000'
   isCustomAccent: boolean
   isCustomAccent2: boolean
   wcag: {
@@ -289,7 +318,7 @@ export function resolvePalette(
   const finalAccent2 = customAccent2 && isValidHex(customAccent2) ? normalizeHex(customAccent2) : preset.accent2
 
   const onAccent = getOnAccentColor(finalAccent)
-  const accentTint = getAccentTint(finalAccent, 0.12)
+  const accentTint = getAccentTint(finalAccent, 0.14)
   const wcag = checkWcagAA(finalAccent, preset.bg)
 
   return {

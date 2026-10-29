@@ -1,4 +1,4 @@
-﻿import { useState, CSSProperties } from 'react'
+import { useState, CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { setProfile, generateId, upsertDocument, Document } from '@/lib/storage'
@@ -22,7 +22,7 @@ const AI_STARTER = {
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type Goal     = 'resume' | 'portfolio' | 'both'
 type RTemplate = 'classic' | 'modern'
-type PTheme    = 'midnight' | 'light' | 'graphite'
+type PTheme    = 'coffee' | 'midnight' | 'light' | 'graphite'
 
 interface WizardState {
   // Step 1
@@ -92,7 +92,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
                 fontFamily: 'var(--font-mono)', fontWeight: 600,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: done || current ? 'var(--color-primary)' : 'var(--color-border)',
-                color: done || current ? '#000' : 'var(--color-text-muted)',
+                color: done || current ? 'var(--color-text-inverse)' : 'var(--color-text-muted)',
                 transition: 'background 300ms',
               }}>
                 {done ? <Check size={11} strokeWidth={3} /> : i + 1}
@@ -113,7 +113,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
           background: 'var(--color-primary)',
           borderRadius: '999px',
           transition: 'width 400ms cubic-bezier(.4,0,.2,1)',
-          boxShadow: '0 0 8px rgba(34,197,94,.5)',
+          boxShadow: '0 0 8px var(--color-primary-ring)',
         }} />
       </div>
     </div>
@@ -139,7 +139,7 @@ function GoalCard({ id, icon: Icon, title, desc, selected, onClick }: {
       <div style={{
         width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: selected ? 'rgba(34,197,94,.25)' : 'var(--color-border)',
+        background: selected ? 'var(--color-primary-subtle)' : 'var(--color-border)',
         transition: 'background 150ms',
       }}>
         <Icon size={18} color={selected ? 'var(--color-primary)' : 'var(--color-text-muted)'} />
@@ -150,7 +150,7 @@ function GoalCard({ id, icon: Icon, title, desc, selected, onClick }: {
       </div>
       {selected && (
         <div style={{ marginLeft: 'auto', flexShrink: 0, width: '18px', height: '18px', borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Check size={11} strokeWidth={3} color="#000" />
+          <Check size={11} strokeWidth={3} color="var(--color-text-inverse)" />
         </div>
       )}
     </button>
@@ -177,7 +177,7 @@ function TemplateCard({ label, selected, onClick, preview }: {
         {preview}
         {selected && (
           <div style={{ position: 'absolute', top: '6px', right: '6px', width: '20px', height: '20px', borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Check size={11} strokeWidth={3} color="#000" />
+            <Check size={11} strokeWidth={3} color="var(--color-text-inverse)" />
           </div>
         )}
       </div>
@@ -190,7 +190,7 @@ function TemplateCard({ label, selected, onClick, preview }: {
 const ResumeClassicPreview = () => (
   <div style={{ background: '#fff', width: '100%', height: '100%', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
     <div style={{ height: '8px', width: '55%', background: '#1a1a1a', borderRadius: '2px' }} />
-    <div style={{ height: '5px', width: '40%', background: '#22C55E', borderRadius: '2px' }} />
+    <div style={{ height: '5px', width: '40%', background: 'var(--color-primary)', borderRadius: '2px' }} />
     <div style={{ height: '1px', background: '#e4e4e7', margin: '4px 0' }} />
     <div style={{ display: 'flex', gap: '6px' }}>
       <div style={{ width: '30%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -205,29 +205,37 @@ const ResumeClassicPreview = () => (
 const ResumeModernPreview = () => (
   <div style={{ background: '#0f172a', width: '100%', height: '100%', padding: '10px 12px', display: 'flex', gap: '8px' }}>
     <div style={{ width: '32%', background: '#1e293b', borderRadius: '6px', padding: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#22C55E', margin: '0 auto 4px' }} />
+      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--color-primary)', margin: '0 auto 4px' }} />
       {[70, 55, 80].map((w, i) => <div key={i} style={{ height: '3px', width: `${w}%`, background: '#334155', borderRadius: '2px' }} />)}
     </div>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '4px' }}>
       <div style={{ height: '6px', width: '70%', background: '#f1f5f9', borderRadius: '2px' }} />
-      <div style={{ height: '4px', width: '50%', background: '#22C55E', borderRadius: '2px' }} />
+      <div style={{ height: '4px', width: '50%', background: 'var(--color-primary)', borderRadius: '2px' }} />
       {[100, 85, 70].map((w, i) => <div key={i} style={{ height: '3px', width: `${w}%`, background: '#334155', borderRadius: '2px', marginTop: '2px' }} />)}
     </div>
   </div>
 )
+const PortfolioCoffeePreview = () => (
+  <div style={{ background: '#2B1D17', width: '100%', height: '100%', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#C48A5A', boxShadow: '0 0 10px rgba(196,138,90,.45)' }} />
+    <div style={{ height: '5px', width: '50%', background: '#FAF6F0', borderRadius: '2px' }} />
+    <div style={{ height: '3px', width: '35%', background: '#C48A5A', borderRadius: '2px' }} />
+    <div style={{ height: '3px', width: '65%', background: '#5A4033', borderRadius: '2px' }} />
+  </div>
+)
 const PortfolioMidnightPreview = () => (
-  <div style={{ background: '#0A0A0B', width: '100%', height: '100%', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center' }}>
-    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 10px rgba(34,197,94,.5)' }} />
-    <div style={{ height: '5px', width: '50%', background: '#F4F4F5', borderRadius: '2px' }} />
-    <div style={{ height: '3px', width: '35%', background: '#22C55E', borderRadius: '2px' }} />
-    <div style={{ height: '3px', width: '65%', background: '#26262B', borderRadius: '2px' }} />
+  <div style={{ background: 'var(--color-bg)', width: '100%', height: '100%', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--color-primary)', boxShadow: '0 0 10px var(--color-primary-ring)' }} />
+    <div style={{ height: '5px', width: '50%', background: 'var(--color-text)', borderRadius: '2px' }} />
+    <div style={{ height: '3px', width: '35%', background: 'var(--color-primary)', borderRadius: '2px' }} />
+    <div style={{ height: '3px', width: '65%', background: 'var(--color-border)', borderRadius: '2px' }} />
   </div>
 )
 const PortfolioLightPreview = () => (
   <div style={{ background: '#FAFAFA', width: '100%', height: '100%', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center' }}>
-    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#16A34A' }} />
-    <div style={{ height: '5px', width: '50%', background: '#0A0A0B', borderRadius: '2px' }} />
-    <div style={{ height: '3px', width: '35%', background: '#16A34A', borderRadius: '2px' }} />
+    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--color-primary)' }} />
+    <div style={{ height: '5px', width: '50%', background: 'var(--color-text)', borderRadius: '2px' }} />
+    <div style={{ height: '3px', width: '35%', background: 'var(--color-primary)', borderRadius: '2px' }} />
     <div style={{ height: '3px', width: '65%', background: '#E4E4E7', borderRadius: '2px' }} />
   </div>
 )
@@ -235,7 +243,7 @@ const PortfolioGraphitePreview = () => (
   <div style={{ background: '#1c1c1e', width: '100%', height: '100%', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'center', justifyContent: 'center' }}>
     <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#6b7280' }} />
     <div style={{ height: '5px', width: '50%', background: '#f9fafb', borderRadius: '2px' }} />
-    <div style={{ height: '3px', width: '35%', background: '#22C55E', borderRadius: '2px' }} />
+    <div style={{ height: '3px', width: '35%', background: 'var(--color-primary)', borderRadius: '2px' }} />
     <div style={{ height: '3px', width: '65%', background: '#374151', borderRadius: '2px' }} />
   </div>
 )
@@ -251,7 +259,7 @@ export function OnboardingPage() {
     goal: null,
     name: user?.name || '', title: '', email: user?.email || '', location: '',
     aiEnabled: false,
-    resumeTemplate: 'classic', portfolioTheme: 'midnight',
+    resumeTemplate: 'classic', portfolioTheme: 'coffee',
   })
   const [busy, setBusy] = useState(false)
 
@@ -420,7 +428,7 @@ export function OnboardingPage() {
         <div style={{
           width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: state.aiEnabled ? 'rgba(34,197,94,.2)' : 'var(--color-border)',
+          background: state.aiEnabled ? 'var(--color-primary-subtle)' : 'var(--color-border)',
           transition: 'background 200ms',
         }}>
           <Sparkles size={18} color={state.aiEnabled ? 'var(--color-primary)' : 'var(--color-text-muted)'} />
@@ -437,7 +445,7 @@ export function OnboardingPage() {
               {AI_STARTER.skills.map(s => (
                 <span key={s} style={{
                   padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontFamily: 'var(--font-mono)',
-                  background: 'rgba(34,197,94,.15)', color: 'var(--color-primary)', border: '1px solid rgba(34,197,94,.3)',
+                  background: 'var(--color-primary-subtle)', color: 'var(--color-primary-text)', border: '1px solid var(--color-primary-border)',
                 }}>{s}</span>
               ))}
             </div>
@@ -496,7 +504,8 @@ export function OnboardingPage() {
           <p style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginBottom: '10px' }}>
             Portfolio theme
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '12px' }}>
+            <TemplateCard label="Coffee"   selected={state.portfolioTheme === 'coffee'}   onClick={() => upd({ portfolioTheme: 'coffee'   })} preview={<PortfolioCoffeePreview />} />
             <TemplateCard label="Midnight" selected={state.portfolioTheme === 'midnight'} onClick={() => upd({ portfolioTheme: 'midnight' })} preview={<PortfolioMidnightPreview />} />
             <TemplateCard label="Light"    selected={state.portfolioTheme === 'light'}    onClick={() => upd({ portfolioTheme: 'light'    })} preview={<PortfolioLightPreview />} />
             <TemplateCard label="Graphite" selected={state.portfolioTheme === 'graphite'} onClick={() => upd({ portfolioTheme: 'graphite' })} preview={<PortfolioGraphitePreview />} />
