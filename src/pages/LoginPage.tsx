@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Eye, EyeOff, Zap, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { AuthError } from '@/lib/auth'
+import { adminApi } from '@/lib/adminApi'
 import { toast } from '@/components/ui/Toast'
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -160,9 +161,36 @@ export function LoginPage() {
   const [suShowC,   setSuShowC]   = useState(false)
   const [suErrors,  setSuErrors]  = useState<Record<string,string>>({})
 
-  // ── Validate + submit sign-in ──────────────────────────────────────────────
+  // ── Validate + submit sign-in ──────────────────────
   const handleSignIn = async (e: FormEvent) => {
     e.preventDefault()
+
+    // If the identifier has no @, treat it as an admin ID login (never email)
+    if (siEmail.trim() && !siEmail.includes('@')) {
+      if (!siPass) {
+        setSiErrors({ email: '', password: 'Password is required.' })
+        return
+      }
+      setBusy(true)
+      try {
+        await adminApi.login(siEmail.trim(), siPass)
+        toast.success('Admin session started.')
+        navigate('/admin', { replace: true })
+        return
+      } catch (err) {
+        const status = (err as any)?.response?.status
+        const resp   = (err as any)?.response?.data
+        if (status === 429 || resp?.locked) {
+          setSiErrors({ email: '', password: resp?.error || 'Form locked for 15 minutes after 5 failed attempts.' })
+        } else {
+          setSiErrors({ email: '', password: 'Invalid ID or password.' })
+        }
+        setBusy(false)
+        return
+      }
+    }
+
+    // Normal email-based user login
     const errs = {
       email:    validateEmail(siEmail),
       password: validatePassword(siPass),
