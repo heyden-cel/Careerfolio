@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Zap, FileText, Globe, Sparkles, ArrowRight, CheckCircle } from 'lucide-react'
+import { Zap, FileText, Globe, Sparkles, ArrowRight, CheckCircle, LayoutDashboard } from 'lucide-react'
 import { Button, Badge, Card } from '@/components/ui'
+import { useAuth } from '@/context/AuthContext'
 
 const features = [
   { icon: FileText,  title: 'Smart Resumes',    desc: 'AI-tailored resumes that match job descriptions. ATS-optimised, one-click export.' },
@@ -11,6 +12,9 @@ const features = [
 const checks = ['No credit card required', 'Free forever plan', 'Your data, your control']
 
 export function LandingPage() {
+  const { user } = useAuth()
+  const firstName = user?.name?.split(' ')[0] ?? ''
+
   return (
     <div className="relative overflow-hidden w-full flex flex-col">
       {/* Hero glow */}
@@ -22,6 +26,14 @@ export function LandingPage() {
           <div className="mb-6">
             <Badge variant="live">New · AI Resume Builder</Badge>
           </div>
+
+          {/* Personalised greeting for signed-in users */}
+          {user && (
+            <p className="text-sm font-medium text-[var(--color-primary)] mb-3 tracking-wide">
+              👋 Welcome back{firstName ? `, ${firstName}` : ''}!
+            </p>
+          )}
+
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[var(--color-text)] leading-tight mb-6">
             Build a portfolio that<br />
             <span className="text-[var(--color-primary)]">actually lands jobs</span>
@@ -29,14 +41,22 @@ export function LandingPage() {
           <p className="text-base sm:text-lg text-[var(--color-text-muted)] leading-relaxed max-w-xl mx-auto mb-8">
             FolioAI crafts beautiful, ATS-optimised resumes and live portfolio sites — powered by AI, personalised for you.
           </p>
+
           <div className="flex flex-row flex-wrap items-center justify-center gap-4 w-full">
-            <Button as={Link} to="/login" className="px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2">
-              Get started free <ArrowRight size={16} />
-            </Button>
+            {user ? (
+              <Button as={Link} to="/dashboard" className="px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2">
+                <LayoutDashboard size={16} /> Go to dashboard
+              </Button>
+            ) : (
+              <Button as={Link} to="/login" className="px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2">
+                Get started free <ArrowRight size={16} />
+              </Button>
+            )}
             <Button as={Link} to="/p/demo" variant="secondary" className="px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2">
               View demo portfolio
             </Button>
           </div>
+
           <ul className="flex flex-row flex-wrap items-center justify-center gap-4 sm:gap-6 mt-8">
             {checks.map(c => (
               <li key={c} className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
@@ -82,9 +102,15 @@ export function LandingPage() {
           <p className="text-[var(--color-text-muted)] max-w-xl mx-auto mb-8 leading-relaxed">
             Join thousands of professionals who land more interviews with FolioAI.
           </p>
-          <Button as={Link} to="/login" className="px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2">
-            Start for free <ArrowRight size={16} />
-          </Button>
+          {user ? (
+            <Button as={Link} to="/dashboard" className="px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2">
+              <LayoutDashboard size={16} /> Open dashboard
+            </Button>
+          ) : (
+            <Button as={Link} to="/login" className="px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2">
+              Start for free <ArrowRight size={16} />
+            </Button>
+          )}
         </div>
       </section>
     </div>

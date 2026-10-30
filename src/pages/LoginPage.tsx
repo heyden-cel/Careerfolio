@@ -141,7 +141,7 @@ export function LoginPage() {
   const { login, register, loginWithGoogle } = useAuth()
   const navigate  = useNavigate()
   const [params]  = useSearchParams()
-  const next      = params.get('next') || '/dashboard'
+  const next      = params.get('next') || '/'
 
   const [tab, setTab]   = useState<Tab>('signin')
   const [busy, setBusy] = useState(false)
