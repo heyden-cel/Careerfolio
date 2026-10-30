@@ -256,3 +256,4 @@ export function QrCodeModal({ url, title, label, onClose }: QrCodeModalProps) {
     </div>
   )
 }
+
