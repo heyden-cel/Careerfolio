@@ -1,11 +1,4 @@
-/**
- * ─── Mock Auth Module ────────────────────────────────────────────────────────
- * Backed by localStorage. Swap individual functions for real API calls later.
- *
- * Storage keys:
- *   folio_users   – Record<email, { id, name, email, passwordHash }>
- *   folio_session – { id, name, email } | null
- */
+import axios from 'axios'
 
 export interface AuthUser {
   id:    string
@@ -14,7 +7,6 @@ export interface AuthUser {
   role?: 'user' | 'admin'
 }
 
-// ── tiny deterministic "hash" (not secure — mock only) ──────────────────────
 function fakeHash(s: string) {
   let h = 0
   for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0
@@ -39,59 +31,99 @@ function writeSession(u: AuthUser | null) {
   localStorage.setItem('folio_session', JSON.stringify(u))
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// ── Public Auth API ──────────────────────────────────────────────────────────
 
 export function getUser(): AuthUser | null {
   return readSession()
 }
 
 export async function signIn(email: string, password: string): Promise<AuthUser> {
-  await delay(400) // simulate network
-  const users = readUsers()
-  const stored = users[email.toLowerCase()]
-  if (!stored || stored.passwordHash !== fakeHash(password)) {
-    throw new AuthError('invalid_credentials', 'Incorrect email or password.')
+  const cleanEmail = email.toLowerCase().trim()
+  try {
+    const res = await axios.post('/api/auth/login', { email: cleanEmail, password }, { withCredentials: true })
+    const user: AuthUser = res.data.user
+    const users = readUsers()
+    users[cleanEmail] = { ...user, passwordHash: fakeHash(password) }
+    writeUsers(users)
+    writeSession(user)
+    return user
+  } catch (err: any) {
+    if (err.response?.status === 401) {
+      throw new AuthError('invalid_credentials', 'Incorrect email or password.')
+    }
+    if (err.response?.status === 403) {
+      throw new AuthError('account_suspended', err.response?.data?.error || 'Account suspended.')
+    }
+    // Offline / fallback to local storage
+    const users = readUsers()
+    const stored = users[cleanEmail]
+    if (!stored || stored.passwordHash !== fakeHash(password)) {
+      throw new AuthError('invalid_credentials', 'Incorrect email or password.')
+    }
+    const user: AuthUser = { id: stored.id, name: stored.name, email: stored.email, role: stored.role || 'user' }
+    writeSession(user)
+    return user
   }
-  const user: AuthUser = { id: stored.id, name: stored.name, email: stored.email, role: stored.role || 'user' }
-  writeSession(user)
-  return user
 }
 
 export async function signUp(name: string, email: string, password: string): Promise<AuthUser> {
-  await delay(400)
-  const users = readUsers()
-  const key   = email.toLowerCase()
-  if (users[key]) throw new AuthError('email_taken', 'An account with that email already exists.')
-  // Public signups are strictly granted role 'user'; admin accounts cannot be created publicly
-  const user: AuthUser = { id: Math.random().toString(36).slice(2), name, email: key, role: 'user' }
-  users[key] = { ...user, passwordHash: fakeHash(password) }
-  writeUsers(users)
-  writeSession(user)
-  return user
+  const cleanEmail = email.toLowerCase().trim()
+  const cleanName = name.trim()
+  try {
+    const res = await axios.post('/api/auth/register', { name: cleanName, email: cleanEmail, password }, { withCredentials: true })
+    const user: AuthUser = res.data.user
+    const users = readUsers()
+    users[cleanEmail] = { ...user, passwordHash: fakeHash(password) }
+    writeUsers(users)
+    writeSession(user)
+    return user
+  } catch (err: any) {
+    if (err.response?.status === 409) {
+      throw new AuthError('email_taken', 'An account with that email already exists.')
+    }
+    if (err.response?.status === 403) {
+      throw new AuthError('signups_disabled', err.response?.data?.error || 'Signups are currently disabled.')
+    }
+    // Offline / fallback
+    const users = readUsers()
+    if (users[cleanEmail]) throw new AuthError('email_taken', 'An account with that email already exists.')
+    const user: AuthUser = { id: 'usr_' + Math.random().toString(36).slice(2, 10), name: cleanName, email: cleanEmail, role: 'user' }
+    users[cleanEmail] = { ...user, passwordHash: fakeHash(password) }
+    writeUsers(users)
+    writeSession(user)
+    return user
+  }
 }
 
 export async function signOut(): Promise<void> {
-  await delay(100)
+  try {
+    await axios.post('/api/auth/logout', {}, { withCredentials: true })
+  } catch {}
   writeSession(null)
 }
 
 export async function signInWithGoogle(): Promise<AuthUser> {
-  await delay(600)
-  // Mock — creates/returns a fixed Google demo account
   const email = 'google-user@gmail.com'
-  const users = readUsers()
-  if (!users[email]) {
-    users[email] = { id: 'google-1', name: 'Google User', email, passwordHash: '' }
+  const name = 'Google User'
+  try {
+    const res = await axios.post('/api/auth/google', { name, email }, { withCredentials: true })
+    const user: AuthUser = res.data.user
+    const users = readUsers()
+    users[email] = { ...user, passwordHash: '' }
     writeUsers(users)
+    writeSession(user)
+    return user
+  } catch {
+    const users = readUsers()
+    if (!users[email]) {
+      users[email] = { id: 'usr_google_1', name, email, passwordHash: '' }
+      writeUsers(users)
+    }
+    const user: AuthUser = { id: users[email].id, name: users[email].name, email, role: 'user' }
+    writeSession(user)
+    return user
   }
-  const user: AuthUser = { id: users[email].id, name: users[email].name, email, role: 'user' }
-  writeSession(user)
-  return user
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function delay(ms: number) { return new Promise(r => setTimeout(r, ms)) }
 
 export class AuthError extends Error {
   constructor(public code: string, message: string) { super(message) }

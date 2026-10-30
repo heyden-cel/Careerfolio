@@ -1,3 +1,5 @@
+import mongoose from 'mongoose'
+import { UserModel } from '../models/User.js'
 import { Router, Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import {
@@ -201,7 +203,27 @@ router.get('/overview', requireAdmin, (_req: Request, res: Response) => {
 
 // ── 3. Users Management ───────────────────────────────────────────────────────
 
-router.get('/users', requireAdmin, (req: Request, res: Response) => {
+router.get('/users', requireAdmin, async (req: Request, res: Response) => {
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const mongoUsers = await UserModel.find({}).lean()
+      for (const mu of mongoUsers) {
+        if (!adminStore.users.has(mu.id)) {
+          adminStore.users.set(mu.id, {
+            id: mu.id,
+            name: mu.name,
+            email: mu.email,
+            role: mu.role as any,
+            status: (mu.status as any) || 'active',
+            joined: (mu.createdAt ? new Date(mu.createdAt) : new Date()).toISOString(),
+            documentsCount: 0,
+          })
+        }
+      }
+    } catch (e) {
+      console.error('Error syncing users in admin:', e)
+    }
+  }
   const { search = '', role = 'all', status = 'all', sort = 'joined', order = 'desc', page = '1', limit = '10' } = req.query as Record<string, string>
 
   let list = Array.from(adminStore.users.values())

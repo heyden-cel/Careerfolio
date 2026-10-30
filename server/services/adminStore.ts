@@ -484,3 +484,19 @@ export function checkDailyAiLimit(userId: string): { allowed: boolean; count: nu
   }
 }
 
+
+export function registerNewUser(id: string, name: string, email: string, role: 'user' | 'admin' = 'user', passwordHash?: string): ManagedUser {
+  const user: ManagedUser = {
+    id,
+    name,
+    email,
+    role,
+    status: 'active',
+    joined: new Date().toISOString(),
+    documentsCount: 0,
+    passwordHash,
+  }
+  adminStore.users.set(id, user)
+  addAuditLog('User Registered', `New account registered: ${name} (${email})`, id, name, 'web')
+  return user
+}
