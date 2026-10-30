@@ -1,9 +1,12 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import { Router, Request, Response } from 'express'
 import { logAiRequest, checkDailyAiLimit } from '../services/adminStore.js'
 
 const router = Router()
 
-// Clean helper without any invented employers, dates, or numbers
+// Helper
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]
 }
@@ -12,8 +15,7 @@ function delay(ms: number): Promise<void> {
   return new Promise(r => setTimeout(r, ms))
 }
 
-// ── Bulletproof Curated Libraries (Strict: NO invented employers, NO invented dates, NO invented numbers) ──
-
+// ── Curated High-Quality Templates (Fallback & Offline) ─────────────────────
 const SUMMARIES = [
   'Results-oriented software engineer with a track record of building reliable, scalable web applications and distributed systems. Passionate about clean architecture, developer experience, and delivering thoughtful user interfaces.',
   'Full-stack engineer specializing in performant frontend applications, robust API design, and cloud-native services. Experienced in collaborating across cross-functional teams to translate complex business requirements into maintainable software.',
@@ -68,8 +70,6 @@ const PROJECT_DESCRIPTIONS = [
   'A developer CLI tool for inspecting, formatting, and standardizing project configurations across monorepo architectures.',
 ]
 
-// ── Keyword Extraction for Tailoring ──
-
 const KNOWN_KEYWORDS = [
   'react', 'next.js', 'vue', 'angular', 'svelte', 'typescript', 'javascript', 'node.js', 'python',
   'go', 'golang', 'rust', 'java', 'docker', 'kubernetes', 'aws', 'gcp', 'azure', 'graphql',
@@ -83,7 +83,6 @@ function extractKeywords(text: string): string[] {
   const lower = text.toLowerCase()
   const found: string[] = []
   for (const kw of KNOWN_KEYWORDS) {
-    // word boundary check or exact inclusion
     const regex = new RegExp(`\\b${kw.replace('.', '\\.')}\\b`, 'i')
     if (regex.test(lower) && !found.includes(kw)) {
       found.push(kw)
@@ -92,13 +91,145 @@ function extractKeywords(text: string): string[] {
   return found
 }
 
-// ── Action Handlers ──
+// ── AI Provider Caller (Gemini REST v1beta) ────────────────────────────────
+interface ProviderResult {
+  text: string
+  rawStatus: number
+  finishReason?: string
+  blockReason?: string
+  safetyRatings?: any[]
+}
 
+export async function callAiProvider(prompt: string, attempt = 1): Promise<ProviderResult> {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY
+  const model = process.env.AI_MODEL || 'gemini-1.5-flash'
+
+  if (!apiKey || apiKey.trim() === '') {
+    const err: any = new Error('AI key missing or invalid')
+    err.status = 500
+    throw err
+  }
+
+  // Request body: confirm prompt text reaches provider by logging length (never content)
+  console.log(`[AI Provider] Attempt ${attempt}: sending prompt (${prompt.length} chars) to model "${model}"`)
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`
+
+  const payload: any = {
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: prompt }],
+      },
+    ],
+    generationConfig: {
+      maxOutputTokens: 2048,
+      temperature: 0.7,
+    },
+  }
+
+  // Disable or restrict thinking mode so it does not consume output budget
+  if (model.includes('2.0') || model.includes('2.5') || model.includes('thinking')) {
+    payload.generationConfig.thinkingConfig = { thinkingBudget: 0 }
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    const rawStatus = res.status
+    const data: any = await res.json().catch(() => ({}))
+
+    console.log(`[AI Provider] Raw response status: ${rawStatus}`)
+
+    if (rawStatus === 401 || rawStatus === 403) {
+      const err: any = new Error('AI key missing or invalid')
+      err.status = 500
+      throw err
+    }
+
+    if (rawStatus === 429) {
+      const err: any = new Error('Rate limit, try again')
+      err.status = 429
+      throw err
+    }
+
+    if (!res.ok) {
+      const errMsg = data.error?.message || `AI provider returned HTTP ${rawStatus}`
+      const err: any = new Error(errMsg)
+      err.status = rawStatus >= 500 ? 502 : 500
+      throw err
+    }
+
+    // Safety or empty candidates: handle blocked responses explicitly
+    const blockReason = data.promptFeedback?.blockReason
+    if (blockReason) {
+      console.warn(`[AI Provider] Prompt blocked by safety: ${blockReason}`)
+      const err: any = new Error(`AI returned no text: blocked by safety (${blockReason})`)
+      err.status = 502
+      throw err
+    }
+
+    const candidate = data.candidates?.[0]
+    if (!candidate) {
+      console.warn('[AI Provider] Candidates array is empty')
+      if (attempt === 1) {
+        console.log('[AI Provider] Retrying once on empty candidate...')
+        return callAiProvider(prompt, 2)
+      }
+      const err: any = new Error('AI returned no text: empty candidates from provider')
+      err.status = 502
+      throw err
+    }
+
+    const finishReason = candidate.finishReason
+    const safetyRatings = candidate.safetyRatings
+    console.log(`[AI Provider] Finish reason: ${finishReason}, Safety ratings count: ${safetyRatings?.length || 0}`)
+
+    if (finishReason === 'SAFETY') {
+      const err: any = new Error(`AI returned no text: blocked by safety (${finishReason})`)
+      err.status = 502
+      throw err
+    }
+
+    // Response parsing: concatenate all parts instead of assuming parts[0]
+    const parts = candidate.content?.parts || []
+    const text = parts.map((p: any) => p.text || '').join('').trim()
+
+    if (!text) {
+      if (attempt === 1) {
+        console.log('[AI Provider] Retrying once on empty text...')
+        return callAiProvider(prompt, 2)
+      }
+      const err: any = new Error(`AI returned no text: finish reason was ${finishReason || 'unknown'}`)
+      err.status = 502
+      throw err
+    }
+
+    return {
+      text,
+      rawStatus,
+      finishReason,
+      blockReason,
+      safetyRatings,
+    }
+  } catch (err: any) {
+    if (attempt === 1 && (!err.status || err.status === 502)) {
+      console.log('[AI Provider] Transient error on attempt 1, retrying once...', err.message)
+      return callAiProvider(prompt, 2)
+    }
+    throw err
+  }
+}
+
+// ── Built-in Fallback Generators ───────────────────────────────────────────
 function handleSummary(body: any): string {
   const { role, headline, skills, currentSummary, context } = body
   if (currentSummary && typeof currentSummary === 'string' && currentSummary.trim().length > 15) {
-    const raw = currentSummary.trim()
-    return `Results-driven software professional specializing in modern application development and scalable architecture. Experienced in delivering dependable solutions, collaborating with cross-functional teams, and upholding rigorous engineering standards across the entire development lifecycle.`
+    return 'Results-driven software professional specializing in modern application development and scalable architecture. Experienced in delivering dependable solutions, collaborating with cross-functional teams, and upholding rigorous engineering standards across the entire development lifecycle.'
   }
   if (role || headline) {
     const target = role || headline
@@ -115,7 +246,7 @@ function handleSummary(body: any): string {
 }
 
 function handleBullets(body: any): string[] {
-  const { role, company, skills, existingBullets, context } = body
+  const { role, existingBullets } = body
   if (Array.isArray(existingBullets) && existingBullets.length > 0) {
     return existingBullets.map((b: string) => {
       const clean = b.replace(/^[•\-\*]\s*/, '').trim()
@@ -181,16 +312,8 @@ function handleStarter(): {
     summary:
       'Dedicated software engineer with a strong foundation in modern web technologies, distributed services, and user-centric application design. Committed to writing clean, maintainable code, establishing robust testing practices, and collaborating across teams to ship dependable products.',
     skills: [
-      'React',
-      'TypeScript',
-      'JavaScript',
-      'Node.js',
-      'PostgreSQL',
-      'REST APIs',
-      'Git',
-      'Docker',
-      'Tailwind CSS',
-      'HTML/CSS',
+      'React', 'TypeScript', 'JavaScript', 'Node.js', 'PostgreSQL',
+      'REST APIs', 'Git', 'Docker', 'Tailwind CSS', 'HTML/CSS',
     ],
     experience: [
       {
@@ -199,8 +322,7 @@ function handleStarter(): {
         start: 'Previous',
         end: 'Present',
         current: true,
-        description:
-          'Design and implement full-stack software capabilities across core application services.',
+        description: 'Design and implement full-stack software capabilities across core application services.',
         bullets: [
           'Architected and implemented responsive user interfaces using modern component patterns and state management.',
           'Developed robust RESTful endpoints and integrated backend services with comprehensive automated test coverage.',
@@ -212,14 +334,12 @@ function handleStarter(): {
     projects: [
       {
         title: 'Modern Web Application',
-        description:
-          'Interactive web application featuring responsive design, secure authentication, and real-time state management.',
+        description: 'Interactive web application featuring responsive design, secure authentication, and real-time state management.',
         tags: ['React', 'TypeScript', 'Node.js', 'Tailwind CSS'],
       },
       {
         title: 'Developer Productivity CLI',
-        description:
-          'Command-line developer utility for inspecting project configurations, validating contracts, and automating code linting.',
+        description: 'Command-line developer utility for inspecting project configurations, validating contracts, and automating code linting.',
         tags: ['TypeScript', 'Node.js', 'REST APIs'],
       },
     ],
@@ -235,21 +355,18 @@ function handleTailorToJob(body: any): {
   const currentSummary = (body.summary || body.currentSummary || '').trim()
   const rawBullets = body.bullets || body.existingBullets || []
 
-  // Extract detected keywords from JD
   const matchedKeywords = jd ? extractKeywords(jd) : []
   const topKwStr = matchedKeywords.slice(0, 4).map(k => k.charAt(0).toUpperCase() + k.slice(1)).join(', ')
 
-  // 1. Rewritten Summary: strictly NO invented employers, NO invented dates, NO invented numbers
   let summary = ''
   if (matchedKeywords.length > 0) {
     summary = `Results-focused software professional with demonstrated experience aligned with target requirements in ${topKwStr}. Dedicated to building scalable, maintainable systems, writing high-quality code, and collaborating effectively across cross-functional teams to deliver reliable software solutions.`
   } else if (currentSummary) {
     summary = `Adaptable software engineer dedicated to building scalable web applications and resilient systems. Adept at rapid technical onboarding, cross-functional collaboration, and delivering clean, well-tested code aligned with organizational goals.`
   } else {
-    summary = `Dedicated software engineer offering hands-on technical expertise, collaborative problem-solving, and a focus on clean architecture. Eager to contribute to team velocity, system reliability, and long-term engineering excellence.`
+    summary = 'Dedicated software engineer offering hands-on technical expertise, collaborative problem-solving, and a focus on clean architecture. Eager to contribute to team velocity, system reliability, and long-term engineering excellence.'
   }
 
-  // 2. Rewritten Bullets: strictly NO invented employers, NO invented dates, NO invented numbers
   let bullets: string[] = []
   const baseBullets: string[] = Array.isArray(rawBullets)
     ? rawBullets
@@ -268,7 +385,6 @@ function handleTailorToJob(body: any): {
       return `Spearheaded ${clean.charAt(0).toLowerCase() + clean.slice(1)} while adhering strictly to performance benchmarks, automated testing, and team coding standards.`
     })
   } else {
-    // Generate tailored bullets from JD keywords without inventing numbers, dates, or employers
     bullets = [
       matchedKeywords.length > 0
         ? `Applied industry best practices in ${topKwStr} to design, implement, and maintain scalable software features.`
@@ -279,20 +395,15 @@ function handleTailorToJob(body: any): {
     ]
   }
 
-  return {
-    summary,
-    bullets,
-    matchedKeywords,
-  }
+  return { summary, bullets, matchedKeywords }
 }
 
-// ── Unified POST Handler for /api/ai ──
-
+// ── Unified POST Handler for /api/ai ───────────────────────────────────────
 const handleAiRequest = async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body || {}
-    // Support both `action` and `type` property names
-    const action = (body.action || body.type || 'summary').toLowerCase().trim()
+    const rawAction = (body.action || body.type || 'summary').toString().toLowerCase().trim()
+    const action = rawAction === 'tailor' ? 'tailor_to_job' : rawAction
     const requestedFormat = (body.format || (req.headers.accept?.includes('text/plain') ? 'text' : 'json')).toLowerCase()
 
     const userId = (req as any).user?.id || '1'
@@ -300,84 +411,78 @@ const handleAiRequest = async (req: Request, res: Response): Promise<void> => {
     const limitCheck = checkDailyAiLimit(userId)
     if (!limitCheck.allowed) {
       res.status(429).json({
-        error: `Daily AI request limit of ${limitCheck.limit} reached. Please contact your administrator.`,
+        error: 'Rate limit, try again',
+        message: `Daily AI request limit of ${limitCheck.limit} reached. Please try again tomorrow.`,
       })
       return
     }
 
     logAiRequest(action, userId, userEmail)
 
-    await delay(350)
+    const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY
+    const useLiveProvider = Boolean(apiKey && apiKey.trim() !== '')
+
+    await delay(150)
 
     switch (action) {
       case 'summary': {
-        const summary = handleSummary(body)
+        let summaryText = ''
+        if (useLiveProvider) {
+          const role = body.role || body.title || body.headline || 'Software Engineer'
+          const prompt = `Write a concise, professional 3-4 sentence resume summary for a ${role}. Focus on engineering impact, scalable architecture, and collaboration without inventing specific employer names, dates, or false metrics.`
+          const providerRes = await callAiProvider(prompt)
+          summaryText = providerRes.text
+        } else {
+          summaryText = handleSummary(body)
+        }
+
         if (requestedFormat === 'text') {
-          res.type('text/plain').send(summary)
+          res.type('text/plain').send(summaryText)
           return
         }
-        res.json({
-          action: 'summary',
-          result: summary,
-          summary,
-        })
+        res.json({ action: 'summary', result: summaryText, summary: summaryText })
         return
       }
 
       case 'bullets': {
-        const bullets = handleBullets(body)
-        const text = bullets.join('\n')
+        let bulletsArray: string[] = []
+        let bulletsText = ''
+        if (useLiveProvider) {
+          const role = body.role || body.title || 'Software Engineer'
+          const prompt = `Generate 4 strong resume bullet points for a ${role}. Each bullet must begin with a strong action verb and highlight engineering rigor, testing, or performance improvements without inventing false companies or dates. Return each bullet point on a new line starting with • `
+          const providerRes = await callAiProvider(prompt)
+          bulletsText = providerRes.text
+          bulletsArray = bulletsText.split('\n').map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean)
+        } else {
+          bulletsArray = handleBullets(body)
+          bulletsText = bulletsArray.join('\n')
+        }
+
         if (requestedFormat === 'text') {
-          res.type('text/plain').send(text)
+          res.type('text/plain').send(bulletsText)
           return
         }
-        res.json({
-          action: 'bullets',
-          result: text,
-          bullets,
-        })
+        res.json({ action: 'bullets', result: bulletsText, bullets: bulletsArray })
         return
       }
 
       case 'project': {
-        const description = handleProject(body)
-        if (requestedFormat === 'text') {
-          res.type('text/plain').send(description)
-          return
+        let projectText = ''
+        if (useLiveProvider) {
+          const title = body.title || 'Portfolio Project'
+          const tech = body.tech || body.skills || 'modern web technologies'
+          const prompt = `Write an engaging, 2-3 sentence technical description for a software project titled "${title}" built with ${Array.isArray(tech) ? tech.join(', ') : tech}. Emphasize architecture, user experience, and performance.`
+          const providerRes = await callAiProvider(prompt)
+          projectText = providerRes.text
+        } else {
+          projectText = handleProject(body)
         }
-        res.json({
-          action: 'project',
-          result: description,
-          description,
-        })
-        return
-      }
 
-      case 'tagline': {
-        const tagline = pick(TAGLINES)
         if (requestedFormat === 'text') {
-          res.type('text/plain').send(tagline)
+          res.type('text/plain').send(projectText)
           return
         }
-        res.json({
-          action: 'tagline',
-          result: tagline,
-          tagline,
-        })
-        return
-      }
-
-      case 'role': {
-        const roleDesc = pick(ROLE_DESCRIPTIONS)
-        if (requestedFormat === 'text') {
-          res.type('text/plain').send(roleDesc)
-          return
-        }
-        res.json({
-          action: 'role',
-          result: roleDesc,
-          role: roleDesc,
-        })
+        res.json({ action: 'project', result: projectText, description: projectText })
         return
       }
 
@@ -394,35 +499,83 @@ const handleAiRequest = async (req: Request, res: Response): Promise<void> => {
           res.type('text/plain').send(text)
           return
         }
-        res.json({
-          action: 'starter',
-          result: starter.summary,
-          data: starter,
-          ...starter,
-        })
+        res.json({ action: 'starter', result: starter.summary, data: starter, ...starter })
         return
       }
 
+      case 'tailor':
       case 'tailor_to_job': {
-        const tailored = handleTailorToJob(body)
+        const jd = (body.jobDescription || body.job_description || body.jd || body.prompt || body.text || '').trim()
+        let tailoredResult: { summary: string; bullets: string[]; matchedKeywords: string[] }
+
+        if (useLiveProvider && jd) {
+          const prompt = `Given this job description: "${jd.slice(0, 1500)}", write:
+1. A tailored 3-sentence professional resume summary.
+2. Four tailored resume bullet points highlighting relevant skills.
+Format as:
+SUMMARY: [Summary here]
+BULLETS:
+• [Bullet 1]
+• [Bullet 2]
+• [Bullet 3]
+• [Bullet 4]`
+          const providerRes = await callAiProvider(prompt)
+          const raw = providerRes.text
+          const summaryMatch = raw.match(/SUMMARY:\s*([\s\S]*?)(?=BULLETS:|$)/i)
+          const bulletsMatch = raw.match(/BULLETS:\s*([\s\S]*?)$/i)
+          const parsedSummary = summaryMatch ? summaryMatch[1].trim() : raw.slice(0, 200)
+          const parsedBullets = bulletsMatch
+            ? bulletsMatch[1].split('\n').map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean)
+            : ['Demonstrated technical expertise aligned with target role requirements.']
+
+          tailoredResult = {
+            summary: parsedSummary,
+            bullets: parsedBullets,
+            matchedKeywords: extractKeywords(jd),
+          }
+        } else {
+          tailoredResult = handleTailorToJob(body)
+        }
+
         if (requestedFormat === 'text') {
           const text = [
             'TAILORED SUMMARY:',
-            tailored.summary,
+            tailoredResult.summary,
             '',
             'TAILORED BULLETS:',
-            ...tailored.bullets.map(b => `• ${b}`),
+            ...tailoredResult.bullets.map(b => `• ${b}`),
           ].join('\n')
           res.type('text/plain').send(text)
           return
         }
+
         res.json({
           action: 'tailor_to_job',
-          result: tailored.summary,
-          summary: tailored.summary,
-          bullets: tailored.bullets,
-          matchedKeywords: tailored.matchedKeywords,
+          result: tailoredResult.summary,
+          summary: tailoredResult.summary,
+          bullets: tailoredResult.bullets,
+          matchedKeywords: tailoredResult.matchedKeywords,
         })
+        return
+      }
+
+      case 'tagline': {
+        const tagline = pick(TAGLINES)
+        if (requestedFormat === 'text') {
+          res.type('text/plain').send(tagline)
+          return
+        }
+        res.json({ action: 'tagline', result: tagline, tagline })
+        return
+      }
+
+      case 'role': {
+        const roleDesc = pick(ROLE_DESCRIPTIONS)
+        if (requestedFormat === 'text') {
+          res.type('text/plain').send(roleDesc)
+          return
+        }
+        res.json({ action: 'role', result: roleDesc, role: roleDesc })
         return
       }
 
@@ -445,31 +598,30 @@ const handleAiRequest = async (req: Request, res: Response): Promise<void> => {
           res.type('text/plain').send(paletteId)
           return
         }
-        res.json({
-          action: 'suggest_palette',
-          paletteId,
-          result: paletteId,
-        })
+        res.json({ action: 'suggest_palette', paletteId, result: paletteId })
         return
       }
 
       default: {
         res.status(400).json({
-          error: `Unknown action: "${action}". Valid actions are: summary, bullets, project, tagline, role, starter, tailor_to_job, suggest_palette`,
+          error: `Unknown action: "${action}". Valid actions are: summary, bullets, project, starter, tailor, tailor_to_job, tagline, role, suggest_palette`,
         })
         return
       }
     }
   } catch (err: any) {
-    console.error('AI route error:', err)
-    res.status(500).json({
-      error: 'Failed to process AI request',
-      message: err?.message || 'Unknown error',
+    console.error('[AI Route Error]:', err.message || err)
+    const statusCode = err.status || 500
+    res.status(statusCode).json({
+      error: err.message || 'Failed to process AI request',
+      status: statusCode,
+      finishReason: err.finishReason,
+      blockReason: err.blockReason,
     })
   }
 }
 
-// Support both root POST / and legacy POST /generate
+// Support both root POST / and POST /generate
 router.post('/', handleAiRequest)
 router.post('/generate', handleAiRequest)
 

@@ -1020,23 +1020,36 @@ export function ResumeEditorPage() {
   ) => {
     setLoadingKey(key)
     try {
-      let res
-      try {
-        res = await axios.post('/api/ai', { type })
-      } catch {
-        res = await axios.post('/api/ai/generate', { type })
-      }
+      const res = await axios.post('/api/ai', {
+        action: type,
+        type,
+        role: profile.headline,
+        title: profile.headline,
+        currentSummary: currentValue,
+        existingBullets: currentValue,
+      })
 
-      if (res.data?.result) {
+      const text = res.data?.result || res.data?.summary || res.data?.text || res.data?.description
+      if (text) {
         setUndoMap(prev => ({ ...prev, [key]: currentValue }))
-        apply(res.data.result)
+        apply(text)
         toast.success('✨ AI suggestions generated!')
       } else {
-        toast.error('AI response was empty')
+        toast.error(res.data?.error || 'AI returned no text. Please retry.')
       }
-    } catch (err) {
-      console.error(err)
-      toast.error('Failed to generate AI content.')
+    } catch (err: any) {
+      console.error('[AI Request Error]:', err)
+      const status = err.response?.status
+      const msg = err.response?.data?.error || err.response?.data?.message
+      if (status === 500) {
+        toast.error(msg || 'AI key missing or invalid')
+      } else if (status === 429) {
+        toast.error(msg || 'Rate limit reached, please try again')
+      } else if (status === 502) {
+        toast.error(msg || 'AI returned no text')
+      } else {
+        toast.error(msg || 'Failed to generate AI content. Please retry.')
+      }
     } finally {
       setLoadingKey(null)
     }

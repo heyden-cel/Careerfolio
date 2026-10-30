@@ -308,17 +308,27 @@ export function PortfolioEditorPage() {
   ) => {
     setAiLoadingKey(key)
     try {
-      const res = await axios.post('/api/ai', { action, context })
-      const text = res.data?.result || res.data?.tagline || res.data?.description || res.data?.role
+      const res = await axios.post('/api/ai', { action, type: action, context })
+      const text = res.data?.result || res.data?.tagline || res.data?.description || res.data?.role || res.data?.summary
       if (text && onSuccess) {
         onSuccess(text)
         toast.success('✨ AI generated content updated!')
       } else {
-        toast.error('AI response was empty')
+        toast.error(res.data?.error || 'AI returned no text. Please retry.')
       }
-    } catch (err) {
-      console.error(err)
-      toast.error('Failed to generate AI suggestion.')
+    } catch (err: any) {
+      console.error('[AI Generator Error]:', err)
+      const status = err.response?.status
+      const msg = err.response?.data?.error || err.response?.data?.message
+      if (status === 500) {
+        toast.error(msg || 'AI key missing or invalid')
+      } else if (status === 429) {
+        toast.error(msg || 'Rate limit reached, please try again')
+      } else if (status === 502) {
+        toast.error(msg || 'AI returned no text')
+      } else {
+        toast.error(msg || 'Failed to generate AI suggestion. Please retry.')
+      }
     } finally {
       setAiLoadingKey(null)
     }
