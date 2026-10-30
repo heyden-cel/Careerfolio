@@ -287,7 +287,7 @@ export function LoginPage() {
               {tab === 'signin' ? 'Welcome back' : 'Create your account'}
             </h1>
             <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-              {tab === 'signin' ? 'Sign in to continue to FolioAI' : 'Start building your portfolio today'}
+              {tab === 'signin' ? 'Sign in to continue to Career Folio' : 'Start building your portfolio today'}
             </p>
           </div>
         </div>

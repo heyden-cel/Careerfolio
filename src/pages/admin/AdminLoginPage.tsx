@@ -131,7 +131,7 @@ export function AdminLoginPage() {
             Admin Authentication
           </h1>
           <p className="text-xs text-[var(--color-text-muted)] mt-1 font-mono">
-            FolioAI System Administration Gateway
+            Career Folio System Administration Gateway
           </p>
         </div>
 

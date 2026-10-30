@@ -79,7 +79,7 @@ class StoreState {
   aiLogs: AiLog[] = []
   auditLogs: AuditLog[] = []
   settings: AdminSettings = {
-    siteName: 'FolioAI',
+    siteName: 'Career Folio',
     allowSignups: true,
     maintenanceMode: false,
     defaultPalette: 'midnight-green',

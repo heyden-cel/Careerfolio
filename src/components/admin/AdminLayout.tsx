@@ -162,7 +162,7 @@ export function AdminLayout() {
           {/* Quick info widget at bottom */}
           <div className="mt-auto p-3 rounded-lg bg-[var(--color-elevated)] border border-[var(--color-border)] text-xs text-[var(--color-text-muted)]">
             <div className="flex items-center justify-between font-mono text-[10px] uppercase text-[var(--color-text)]">
-              <span>FolioAI Core</span>
+              <span>Career Folio Core</span>
               <span className="text-[var(--color-primary)]">v1.2.0</span>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed">

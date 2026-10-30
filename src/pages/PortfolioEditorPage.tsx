@@ -563,7 +563,7 @@ export function PortfolioEditorPage() {
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="h-screen flex flex-col bg-[var(--color-bg)] overflow-hidden">
-      {/* ── Top Header Toolbar (FolioAI UI: Black + Green only) ── */}
+      {/* ── Top Header Toolbar (Career Folio UI: Black + Green only) ── */}
       <header className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-surface)] shrink-0 gap-3 z-30">
         {/* Left: Back & Title */}
         <div className="flex items-center gap-3">

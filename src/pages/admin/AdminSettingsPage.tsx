@@ -152,7 +152,7 @@ export function AdminSettingsPage() {
                 value={settings.siteName}
                 onChange={e => setSettings(s => s ? { ...s, siteName: e.target.value } : s)}
                 className="w-full px-3 py-2 text-sm rounded-[var(--radius-control)] bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-ring)] focus:border-[var(--color-primary)] transition-all"
-                placeholder="FolioAI"
+                placeholder="Career Folio"
               />
             </div>
 

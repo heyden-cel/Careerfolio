@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <Link to="/" className="flex items-center gap-2 font-bold text-[var(--color-text)] mb-3 hover:text-[var(--color-primary)] transition-colors tracking-tight">
               <Zap size={16} className="text-[var(--color-primary)]" />
-              FolioAI
+              Career Folio
             </Link>
             <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
               AI-powered portfolio and resume builder for professionals.
@@ -34,7 +34,7 @@ export function Footer() {
         </div>
         <div className="pt-6 border-t border-[var(--color-border)] text-center">
           <p className="text-xs text-[var(--color-text-muted)] text-center">
-            © 2026 FolioAI. MIT License.
+            © 2026 Career Folio. MIT License.
           </p>
         </div>
       </div>

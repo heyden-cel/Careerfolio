@@ -23,7 +23,7 @@ export function Navbar() {
       <div className="w-full max-w-6xl mx-auto px-6 h-[60px] flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-bold text-[var(--color-text)] hover:text-[var(--color-primary)] transition-colors tracking-tight">
           <Zap size={18} className="text-[var(--color-primary)]" />
-          FolioAI
+          Career Folio
         </Link>
 
         <nav className="hidden sm:flex items-center gap-1">

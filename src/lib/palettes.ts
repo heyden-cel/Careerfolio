@@ -1,4 +1,4 @@
-// ─── FolioAI Color Combinations (Palettes) ───────────────────────────────────
+// ─── Career Folio Color Combinations (Palettes) ───────────────────────────────────
 
 export interface PalettePreset {
   id: string

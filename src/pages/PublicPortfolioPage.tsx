@@ -1114,7 +1114,7 @@ export function PublicPortfolioPage() {
               className="font-bold hover:underline transition-colors"
               style={{ color: 'var(--accent)' }}
             >
-              FolioAI
+              Career Folio
             </Link>
           </div>
         </footer>

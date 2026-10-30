@@ -39,7 +39,7 @@ export function LandingPage() {
             <span className="text-[var(--color-primary)]">actually lands jobs</span>
           </h1>
           <p className="text-base sm:text-lg text-[var(--color-text-muted)] leading-relaxed max-w-xl mx-auto mb-8">
-            FolioAI crafts beautiful, ATS-optimised resumes and live portfolio sites — powered by AI, personalised for you.
+            Career Folio crafts beautiful, ATS-optimised resumes and live portfolio sites — powered by AI, personalised for you.
           </p>
 
           <div className="flex flex-row flex-wrap items-center justify-center gap-4 w-full">
@@ -100,7 +100,7 @@ export function LandingPage() {
             Ready to stand out?
           </h2>
           <p className="text-[var(--color-text-muted)] max-w-xl mx-auto mb-8 leading-relaxed">
-            Join thousands of professionals who land more interviews with FolioAI.
+            Join thousands of professionals who land more interviews with Career Folio.
           </p>
           {user ? (
             <Button as={Link} to="/dashboard" className="px-6 py-3 rounded-lg inline-flex items-center justify-center gap-2">
