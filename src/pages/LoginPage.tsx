@@ -223,7 +223,7 @@ export function LoginPage() {
     try {
       await register(suName, suEmail, suPass)
       toast.success('Account created!')
-      navigate('/onboarding', { replace: true })
+      navigate('/', { replace: true })
     } catch (err) {
       const msg = err instanceof AuthError ? err.message : 'Something went wrong. Please try again.'
       setSuErrors(e => ({ ...e, email: msg }))
