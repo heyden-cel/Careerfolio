@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import {
   ChevronDown, ChevronUp, Plus, Trash2,
-  Sparkles, Undo2, Check, Download, ArrowLeft,
+  Sparkles, Undo2, Check, Download, ArrowLeft, QrCode,
   FileText, Loader2, Eye, Edit3, ZoomIn, ZoomOut,
   RotateCcw, Globe, Mail, Phone, MapPin,
   Briefcase, FolderGit2, CheckCircle2, Cloud
@@ -16,6 +16,7 @@ import {
 import { AppearanceCard } from '@/components/AppearanceCard'
 import { resolvePalette } from '@/lib/palettes'
 import { toast } from '@/components/ui/Toast'
+import { QrCodeModal } from '@/components/ui/QrCodeModal'
 
 // ─── Debounce helper ─────────────────────────────────────────────────────────
 function debounce<T extends (...args: any[]) => void>(fn: T, ms: number) {
@@ -948,6 +949,7 @@ export function ResumeEditorPage() {
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit')
   const [zoom, setZoom] = useState<number>(0.74)
   const [newSkillInput, setNewSkillInput] = useState('')
+  const [showQr, setShowQr] = useState(false)
 
   // Palette State & Custom Accents
   const [paletteId, setPaletteId] = useState<string>(doc.palette || 'midnight-green')
@@ -2004,6 +2006,37 @@ export function ResumeEditorPage() {
               <RotateCcw size={12} />
             </button>
           </div>
+
+          {/* QR Code button */}
+          <button
+            type="button"
+            onClick={() => setShowQr(true)}
+            title="Show QR Code"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 13px',
+              fontSize: '12px',
+              fontWeight: 600,
+              borderRadius: '7px',
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-elevated)',
+              color: 'var(--color-text)',
+              cursor: 'pointer',
+              transition: 'all 150ms',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'var(--color-primary)'
+              e.currentTarget.style.color = 'var(--color-primary)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'var(--color-border)'
+              e.currentTarget.style.color = 'var(--color-text)'
+            }}
+          >
+            <QrCode size={13} /> QR Code
+          </button>
 
           {/* Download PDF button */}
           <button

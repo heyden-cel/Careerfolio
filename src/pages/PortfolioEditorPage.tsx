@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import {
-  Globe, ExternalLink, Sparkles, ArrowLeft,
+  Globe, ExternalLink, Sparkles, ArrowLeft, QrCode,
   Monitor, Smartphone, Plus, Trash2, Mail, Eye, EyeOff,
   FolderGit2, CheckCircle2, ChevronDown, ChevronUp,
   GraduationCap, Award, Upload, ArrowUp, ArrowDown,
@@ -20,6 +20,7 @@ import {
 } from '@/lib/palettes'
 import { AppearanceCard } from '@/components/AppearanceCard'
 import { toast } from '@/components/ui/Toast'
+import { QrCodeModal } from '@/components/ui/QrCodeModal'
 
 function Github({ size = 14, className = '', style }: { size?: number; className?: string; style?: React.CSSProperties }) {
   return (
@@ -116,6 +117,7 @@ export function PortfolioEditorPage() {
 
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>('desktop')
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit')
+  const [showQr, setShowQr] = useState(false)
 
   const [sections, setSections] = useState<Record<string, boolean>>(() => {
     return {
@@ -663,6 +665,17 @@ export function PortfolioEditorPage() {
               <Smartphone size={14} />
             </button>
           </div>
+
+          {/* QR Code Button */}
+          <button
+            type="button"
+            onClick={() => setShowQr(true)}
+            title="Show QR Code"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-[var(--color-border)] text-[var(--color-text)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all"
+          >
+            <QrCode size={13} />
+            <span className="hidden sm:inline">QR Code</span>
+          </button>
 
           {/* Live Link Button */}
           {doc.live && (
